@@ -1,5 +1,7 @@
 import streamlit as st
 from datetime import date, timedelta
+from youtube_api import buscar_videos
+
 
 #Config da página
 st.set_page_config("Tubetrend", layout="centered")
@@ -29,24 +31,68 @@ st.markdown("""
 
 
 #Filtros
+
 st.markdown("### 🔍 Filtros de busca")
 
-palavra_chave = st.text_input("Palavra chave", placeholder="Ex. biblia, histórias, fé...")
+st.text_input("Palavra chave", placeholder="Ex. biblia, histórias, fé...")
 
-quantidade_filtros = st.slider("### Quantos vídeos deseja buscar?", min_value=1, max_value=50, value=10)
+st.slider("### Quantos vídeos deseja buscar?", min_value=1, max_value=50, value=10)
 
-dias = st.slider("Buscar vídeos nos ultimos quantos dias?", min_value=1, max_value=10, value=7)
+st.slider("Buscar vídeos nos ultimos quantos dias?", min_value=1, max_value=10, value=7)
 
-min_comentarios = st.number_input("Mínimo de comentários", min_value=0, max_value=100)
+st.number_input("Mínimo de comentários", min_value=0, max_value=100)
 
-min_curtidas = st.number_input("Mínimo de curtidas", min_value=0, value=500)
+st.number_input("Mínimo de curtidas", min_value=0, value=500)
 
-min_inscritos = st.number_input("Mínimo de inscritos", min_value=0, max_value=1000)
+st.number_input("Mínimo de inscritos", min_value=0, max_value=1000)
 
 st.selectbox("Permitir shorts", options=["Sim", "Não"])
 
+
+#CSS
+st.markdown("""
+    <style>
+        .video-container{
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .video-title{
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .video-channel{
+            font-size: 12px;
+            text-align: center;
+        }
+    </style>
+
+""", unsafe_allow_html=True)
+
+
+# Buscar vídeos
+
+col1, col2 = st.columns(2)
+colunas = [col1, col2]
+
 if st.button("Buscar vídeos"):
-    st.success("🔎 A busca será feita com os filtros selecionados (ainda sem conexão com YouTube)")
+    resultados = buscar_videos(palavra_chave=titulo_busca, max_results={quantidade_videos})
 
-
-#Exibição dos vídeos
+    for i,  item in enumerate(resultados["items"]):
+        video_id = item["id"]["videoId"]
+        titulo = item["snippet"]["title"]
+        canal = item["snippet"]["channelTitle"]
+        thumbnail = item["snippet"]["thumbnails"]["high"]["url"]
+        
+        with colunas[i % 2]:
+            st.markdown('<div class="video-container">', unsafe_allow_html=True)
+            st.image(thumbnail, use_container_width=False, width=300)
+            st.markdown(f'<div class="video-title">{titulo}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="video-channel">{canal}</div>', unsafe_allow_html=True)
+            st.markdown(f"[Assistir no Youtube](https://www.youtube.com/watch?v={video_id})")
+            st.markdown('</div>', unsafe_allow_html=True)
